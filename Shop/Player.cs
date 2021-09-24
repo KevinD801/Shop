@@ -7,73 +7,76 @@ namespace Shop
 {
     class Player
     {
-        private int _gold;
-        private Item[] _inventory;
+        int _gold;
+        Item[] _inventory = new Item[0];
 
-        public Player()
+        public int Gold
         {
-            _gold = 100;
-
-            // Creates a new item array with three items with default values
-            _inventory = new Item[3];
+            get { return _gold; }
         }
 
-        public bool Buy(Item item, int inventoryIndex)
+        public Player(int gold)
         {
-            // Check to see if the player can afford the item
-            if (_gold >= item.cost)
-            {
-                // Pay for item.
-                _gold -= item.cost;
+            _gold = gold;
+        }
 
-                // Place item in inventory array.
-                _inventory[inventoryIndex] = item;
-                return true;
+        public void Buy(Item item)
+        {
+            _gold -= item.Cost;
+
+            Item[] newInventory = new Item[_inventory.Length + 1];
+
+            for (int i = 0; i < _inventory.Length; i++)
+                newInventory[i] = _inventory[i];
+
+            newInventory[_inventory.Length] = item;
+
+            _inventory = newInventory;
+        }
+
+        public string[] GetItemNames()
+        {
+            string[] itemNames = new string[_inventory.Length];
+
+            for (int i = 0; i < _inventory.Length; i++)
+            {
+                itemNames[i] = _inventory[i].Name;
             }
 
-            return false;
-        }
-
-        public string GetItemNames()
-        {
-
-        }
-
-        public int GetGold()
-        {
-            return _gold;
-        }
-
-        public Item[] GetInventory()
-        {
-            return _inventory;
+            return itemNames;
         }
 
         public void Save(StreamWriter writer)
         {
-            writer.WriteLine();
-            base.Save(writer);
-            writer.WriteLine(_currentItemIndex);
+            writer.WriteLine(_gold);
+
+            writer.WriteLine(_inventory.Length);
+
+            for (int i = 0; i < _inventory.Length; i++)
+            {
+                writer.WriteLine(_inventory[i].Name);
+                writer.WriteLine(_inventory[i].Cost);
+            }
         }
 
         public bool Load(StreamReader reader)
         {
-            // If the base loading function fails..
-            if (!base.Load(reader))
+            if (int.TryParse(reader.ReadLine(), out _gold))
             {
-                // ...return false
                 return false;
             }
+            
+            string inventoryLength = Console.ReadLine();
 
-            // If the current line can't be converted into an int...
-            if (!int.TryParse(reader.ReadLine(), out _currentItemIndex))
+            _inventory = new Item[int.Parse(inventoryLength)];
+
+            for (int i = 0; i < _inventory.Length; i++)
             {
-                // ...return false
-                return false;
+                _inventory[i].Name = reader.ReadLine();
+                _inventory[i].Cost = int.Parse(reader.ReadLine());
             }
 
-            // Return whether or not the item was equipped successfully
-            return TryEquipItem(_currentItemIndex);
+            return true;
         }
     }
 }

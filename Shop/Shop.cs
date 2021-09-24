@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
 
 namespace Shop
 {
@@ -9,46 +10,71 @@ namespace Shop
         private int _gold;
         private Item[] _inventory;
 
-        public Shop()
+        public Shop(params Item[] inventory)
         {
-            _gold = 100;
-            _inventory = new Item[3];
+            _inventory = inventory;
         }
 
-        public Shop(Item[] items)
+        public bool Sell(Player player, int i)
         {
-            _gold = 100;
-
-            // Set our inventory array to be the array of items that was passed in.
-            _inventory = items;
-        }
-
-        public bool Sell(Player player, int itemIndex, int playerIndex)
-        {
-            // Find the item to buy in the inventory array
-            Item itemToBuy = _inventory[itemIndex];
-
-            // Check to see if the player ourchased the item successfully.
-            if (player.Buy(itemToBuy, playerIndex))
+            if (player.Gold >= _inventory[i].Cost)
             {
-                // Increase shops gold by item cost to complete the transaction
-                _gold += itemToBuy.cost;
+                _gold += _inventory[i].Cost;
+                player.Buy(_inventory[i]);
                 return true;
             }
-
-            return false;
+            else
+            {
+                return false;
+            }
         }
 
         public string[] GetItemNames()
         {
-            string[] itemNames = new string[_items.Length];
+            string[] itemNames = new string[_inventory.Length];
 
-            for (int i = 0; i < _items.Length; i++)
+            for (int i = 0; i < _inventory.Length; i++)
             {
-                itemNames[i] = _items[i].Name;
+                itemNames[i] = $"{_inventory[i].Name} - {_inventory[i].Cost}g";
             }
 
             return itemNames;
+        }
+
+        public void Save(StreamWriter writer)
+        {
+            // Save Player Gold
+            writer.WriteLine(_gold);
+
+            // Save Player Inventory Amount 
+            writer.WriteLine(_inventory.Length);
+
+            for (int i = 0; i < _inventory.Length; i++)
+            {
+                writer.WriteLine(_inventory[i].Name);
+                writer.WriteLine(_inventory[i].Cost);
+            }
+        }
+
+
+        public bool Load(StreamReader reader)
+        {
+            if (int.TryParse(reader.ReadLine(), out _gold))
+            {
+                return false;
+            }
+
+            string inventoryLength = Console.ReadLine();
+
+            _inventory = new Item[int.Parse(inventoryLength)];
+
+            for (int i = 0; i < _inventory.Length; i++)
+            {
+                _inventory[i].Name = reader.ReadLine();
+                _inventory[i].Cost = int.Parse(reader.ReadLine());
+            }
+
+            return true;
         }
     }
 }
